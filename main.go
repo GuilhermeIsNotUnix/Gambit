@@ -7,11 +7,6 @@ import (
 	"time"
 )
 
-type TimeData struct {
-	Hour    int
-	Minutes int
-}
-
 // Format the scheduled time string in a way that it returns the hour or the minutes. If hourReturn is true, it will return hour, else return minutes.
 func formatTimeString(scheduledTime string, hourReturn bool) int {
 	if hourReturn == true {
@@ -53,50 +48,33 @@ func getTime() string {
 	return scheduledTime
 }
 
-func getScheduledHour(scheduledTime string) int {
+func getFutureHour(scheduledTime string) int {
 	hour := formatTimeString(scheduledTime, true)
-
 	return hour
 }
 
-func getScheduledMinutes(scheduledTime string) int {
+func getFutureMinute(scheduledTime string) int {
 	minutes := formatTimeString(scheduledTime, false)
-
 	return minutes
 }
 
-func getHour() int {
-	return time.Now().Hour()
-}
-
-func getMinute() int {
-	return time.Now().Minute()
-}
-
-func RemainingHour(scheduledTime string) int {
-	if getScheduledHour(scheduledTime) < getHour() {
-		remainingHour := getScheduledHour(scheduledTime) + 24 - getHour()
-		return remainingHour
+// Given an hour and minutes the function constructs a formal standard date type, if you given hour is less the actual system hour, it means it will be that hour from the next day, or else its the same day
+func constructDate(givenHour int, givenMinute int) time.Time {
+	if givenHour < time.Now().Hour() {
+		date := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day()+1, givenHour, givenMinute, 0, 0, time.UTC)
+		return date
 	}
 
-	remainingHour := getScheduledHour(scheduledTime) - getHour()
-	return remainingHour
+	date := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), givenHour, givenMinute, 0, 0, time.UTC)
+	return date
 }
 
-func RemainingMinutes(scheduledTime string) int {
-	if getScheduledMinutes(scheduledTime) < getMinute() {
-		remainingMinutes := getScheduledMinutes(scheduledTime) + 60 - getMinute()
-		return remainingMinutes
-	}
+// Compare two dates and return the time difference between them in seconds
+func compareDate(date1 time.Time, date2 time.Time) int {
+	dif := date2.Sub(date1)
+	time_in_seconds := dif.Seconds()
 
-	remainingMinutes := getScheduledMinutes(scheduledTime) - getMinute()
-	return remainingMinutes
-}
-
-// Convert the hours and minutes to seconds
-func convertTimeToSeconds(hour int, minutes int) int {
-	timeInSeconds := hour*60*60 + minutes*60
-	return timeInSeconds
+	return int(time_in_seconds)
 }
 
 // Given the time in seconds, it will schedule the computer to shutdown in the especified time
