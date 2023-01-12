@@ -111,6 +111,18 @@ func shutdown(timeInSeconds int) {
 	fmt.Println("Output: ", string(out))
 }
 
+// Given the time in seconds, it will schedule the computer to shutdown in the especified time
+func abortShutdown() {
+	cmd := exec.Command("shutdown", "-a")
+	out, err := cmd.Output()
+
+	if err != nil {
+		fmt.Println("Erro, não foi possivel: ", err)
+	}
+
+	fmt.Println("Output: ", string(out))
+}
+
 func main() {
 	scheduledTime := getTime()
 
@@ -120,6 +132,7 @@ func main() {
 	timeInSeconds := convertTimeToSeconds(remainingHour, remainingMinutes)
 
 	var esc string
+	fmt.Println("[PRESSIONE ENTER PARA CONCLUIR]")
 	fmt.Scanln(&esc)
 	shutdown(timeInSeconds)
 }
