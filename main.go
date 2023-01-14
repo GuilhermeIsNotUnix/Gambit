@@ -1,23 +1,10 @@
-/* Copyright 2023 Guilherme Faura
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License. */
-
 package main
 
 import (
 	"log"
 	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -33,14 +20,18 @@ func shutdown(timeInSeconds int) {
 
 	if err != nil {
 		log.Println("Erro, não foi possivel: ", err)
+
+		if strings.Contains(err.Error(), "1190") {
+			log.Println("voce já agendou um tempo")
+		}
 	}
 
 	log.Println("Output: ", string(out))
 }
 
-// If a schedule exists it will abort with this
+// Given the time in seconds, it will schedule the computer to shutdown in the especified time
 func abortShutdown() {
-	cmd := exec.Command("shutdown", "-a")
+	cmd := exec.Command("shutdown", "/a")
 	out, err := cmd.Output()
 
 	if err != nil {
@@ -50,23 +41,27 @@ func abortShutdown() {
 	log.Println("Output: ", string(out))
 }
 
-// Format the scheduled time string in a way that it returns the hour or the minutes. If hour_return is true, it will return hour, else return minutes.
+// Format the scheduled time string in a way that it returns the hour or the minutes. If hour_return is true, it will return hour, else return minutes. It first checks if the unformatted string is not empty and if the lenght is 5, just then it catchs the hour or minute as integer.
 func formatTimeString(scheduled_time string, hour_return bool) int {
-	if hour_return == true {
-		hour, err := strconv.Atoi(scheduled_time[0:2])
-		if err != nil {
-			log.Println("Erro no primeiro ATOI(): ", err)
+	if scheduled_time != "" && len(scheduled_time) == 5 {
+		if hour_return == true {
+			hour, err := strconv.Atoi(scheduled_time[0:2])
+			if err != nil {
+				log.Println("Erro no primeiro ATOI(): ", err)
+			}
+
+			return hour
 		}
 
-		return hour
+		minutes, err := strconv.Atoi(scheduled_time[3:5])
+		if err != nil {
+			log.Println("Erro no segundo ATOI(): ", err)
+		}
+
+		return minutes
 	}
 
-	minutes, err := strconv.Atoi(scheduled_time[3:5])
-	if err != nil {
-		log.Println("Erro no segundo ATOI(): ", err)
-	}
-
-	return minutes
+	return -1
 }
 
 // Given an hour and minutes the function constructs a formal standard date type, if you given hour is less the actual system hour, it means it will be that hour from the next day, or else its the same day
@@ -80,12 +75,15 @@ func constructDate(givenHour int, givenMinute int) time.Time {
 	return date
 }
 
-// Compare two dates and return the time difference between them in seconds
-func compareDate(date1 time.Time, date2 time.Time) int {
-	dif := date2.Sub(date1)
-	time_in_seconds := dif.Seconds()
+// Compare a given date with time.Now() and return the time difference between them in seconds
+func compareDate(given_date time.Time) int {
+	dif_date := time.Date(given_date.Year()-time.Now().Year(), given_date.Month()-time.Now().Month(), given_date.Day()-time.Now().Day(), given_date.Hour()-time.Now().Hour(), given_date.Minute()-time.Now().Minute(), given_date.Second()-time.Now().Second(), given_date.Nanosecond()-time.Now().Nanosecond(), time.UTC)
 
-	return int(time_in_seconds)
+	//dif := time.Until(given_date).Abs().Seconds()
+	dif_time_in_seconds := int(dif_date.Minute()*60 + dif_date.Second())
+	log.Println("dif_time: ", dif_time_in_seconds)
+
+	return dif_time_in_seconds
 }
 
 // Validate input veryfying if its in the format hh:mm in the range 00:00 to 23:59
@@ -96,13 +94,13 @@ func validateTimeInput(input string) string {
 	//fmt.Println("Digite uma hora para ser agendado o desligamento no formato (hh:mm, exemplo: 22:31)")
 	//fmt.Scanln(&scheduledTime)
 
-	if formatTimeString(scheduled_time, true) < 0 || formatTimeString(scheduled_time, true) > 23 {
+	if formatTimeString(input, true) < 0 || formatTimeString(input, true) > 23 {
 		invalid = true
 
-		if formatTimeString(scheduled_time, true) >= 0 || formatTimeString(scheduled_time, true) <= 23 {
+		if formatTimeString(input, true) >= 0 || formatTimeString(input, true) <= 23 {
 			invalid = true
 
-			if formatTimeString(scheduled_time, false) < 0 || formatTimeString(scheduled_time, false) > 59 {
+			if formatTimeString(input, false) < 0 || formatTimeString(input, false) > 59 {
 				invalid = true
 			}
 		}
@@ -141,14 +139,13 @@ func main() {
 		log.Println("Content was:", input.Text)
 
 		scheduled_time := validateTimeInput(input.Text)
-		log.Println(scheduled_time)
+		log.Println("main(): scheduled_time: ", scheduled_time)
 
 		if scheduled_time != "" {
-			future_date := constructDate(formatTimeString(scheduled_time, true), formatTimeString(scheduled_time, false))
-			//future_date := constructDate(02, 07)
-			timeInSeconds := compareDate(time.Now(), future_date)
+			scheduled_date := constructDate(formatTimeString(scheduled_time, true), formatTimeString(scheduled_time, false))
+			time_in_seconds := compareDate(scheduled_date)
 
-			shutdown(timeInSeconds)
+			shutdown(time_in_seconds)
 		}
 
 	}), widget.NewButton("Cancelar agendamentos", func() {
