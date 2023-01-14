@@ -38,7 +38,7 @@ func shutdown(timeInSeconds int) {
 	log.Println("Output: ", string(out))
 }
 
-// Given the time in seconds, it will schedule the computer to shutdown in the especified time
+// If a schedule exists it will abort with this
 func abortShutdown() {
 	cmd := exec.Command("shutdown", "-a")
 	out, err := cmd.Output()
