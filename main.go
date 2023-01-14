@@ -101,19 +101,7 @@ func validateTimeInput(input string) string {
 		}
 	}
 
-	/*for formatTimeString(scheduled_time, true) < 0 || formatTimeString(scheduled_time, true) > 23 {
-		fmt.Println("Hora invalida, digite a hora novamente no formato hh:mm, lembrando que horas vão de 00 a 23 e minutos de 0 a 59")
-		fmt.Scanln(&scheduled_time)
-
-		if formatTimeString(scheduled_time, true) >= 0 || formatTimeString(scheduled_time, true) <= 23 {
-			for formatTimeString(scheduled_time, false) < 0 || formatTimeString(scheduled_time, false) > 59 {
-				fmt.Println("Hora invalida, digite a hora novamente no formato hh:mm, lembrando que horas vão de 00 a 23 e minutos de 0 a 59")
-				fmt.Scanln(&scheduled_time)
-			}
-		}
-	}*/
 	scheduled_time = input
-
 	return scheduled_time
 }
 
@@ -143,6 +131,7 @@ func main() {
 
 		if scheduled_time != "" {
 			future_date := constructDate(formatTimeString(scheduled_time, true), formatTimeString(scheduled_time, false))
+			//future_date := constructDate(02, 07)
 			timeInSeconds := compareDate(time.Now(), future_date)
 
 			shutdown(timeInSeconds)
