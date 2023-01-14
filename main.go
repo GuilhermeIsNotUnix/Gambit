@@ -10,34 +10,35 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 )
 
 // Given the time in seconds, it will schedule the computer to shutdown in the especified time
-func shutdown(timeInSeconds int) {
+func shutdown(timeInSeconds int, window fyne.Window) {
 	cmd := exec.Command("shutdown", "-s", "-t", strconv.Itoa(timeInSeconds))
 	out, err := cmd.Output()
 
 	if err != nil {
-		log.Println("Erro, não foi possivel: ", err)
-
 		if strings.Contains(err.Error(), "1190") {
-			log.Println("voce já agendou um tempo")
+			dialog.ShowError(err, window)
 		}
 	}
 
+	dialog.ShowInformation("Gambit", "Você agendou o horario", window)
 	log.Println("Output: ", string(out))
 }
 
 // Given the time in seconds, it will schedule the computer to shutdown in the especified time
-func abortShutdown() {
-	cmd := exec.Command("shutdown", "/a")
+func abortShutdown(window fyne.Window) {
+	cmd := exec.Command("shutdown", "-a")
 	out, err := cmd.Output()
 
 	if err != nil {
-		log.Println("Erro, não foi possivel: ", err)
+		dialog.ShowError(err, window)
 	}
 
+	dialog.ShowInformation("Gambit", "Você cancelou os horario agendados", window)
 	log.Println("Output: ", string(out))
 }
 
@@ -87,7 +88,7 @@ func compareDate(given_date time.Time) int {
 }
 
 // Validate input veryfying if its in the format hh:mm in the range 00:00 to 23:59
-func validateTimeInput(input string) string {
+func validateTimeInput(input string, window fyne.Window) string {
 	var scheduled_time string
 	var invalid = false
 
@@ -106,7 +107,7 @@ func validateTimeInput(input string) string {
 		}
 
 		if invalid != false {
-			log.Println("Hora invalida, digite a hora novamente no formato hh:mm, lembrando que horas vão de 00 a 23 e minutos de 0 a 59")
+			dialog.ShowInformation("Gambit", "Hora invalida, digite a hora novamente no formato hh:mm, lembrando que horas vão de 00 a 23 e minutos de 0 a 59", window)
 			scheduled_time = ""
 
 			return scheduled_time
@@ -138,18 +139,17 @@ func main() {
 	content := container.NewVBox(input, widget.NewButton("Agendar", func() {
 		log.Println("Content was:", input.Text)
 
-		scheduled_time := validateTimeInput(input.Text)
-		log.Println("main(): scheduled_time: ", scheduled_time)
+		scheduled_time := validateTimeInput(input.Text, window)
 
 		if scheduled_time != "" {
 			scheduled_date := constructDate(formatTimeString(scheduled_time, true), formatTimeString(scheduled_time, false))
 			time_in_seconds := compareDate(scheduled_date)
 
-			shutdown(time_in_seconds)
+			shutdown(time_in_seconds, window)
 		}
 
 	}), widget.NewButton("Cancelar agendamentos", func() {
-		abortShutdown()
+		abortShutdown(window)
 	}))
 
 	window.SetContent(content)
