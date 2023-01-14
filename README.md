@@ -1,5 +1,6 @@
 # Gambit
-Gambit is a shutdown scheduler utility for Windows made in Go. Gambit is licensed under the Apache-2.0 license, please read it carefully.
+
+Gambit is a shutdown scheduler utility for Windows made in Go with Fyne library for GUI. Gambit is licensed under the Apache-2.0 license, please read it carefully.
 
 # Use
 
