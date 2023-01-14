@@ -1,60 +1,57 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os/exec"
 	"strconv"
 	"time"
+
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/widget"
 )
 
-// Format the scheduled time string in a way that it returns the hour or the minutes. If hourReturn is true, it will return hour, else return minutes.
-func formatTimeString(scheduledTime string, hourReturn bool) int {
-	if hourReturn == true {
-		hour, err := strconv.Atoi(string([]rune(scheduledTime)[0:2]))
+// Given the time in seconds, it will schedule the computer to shutdown in the especified time
+func shutdown(timeInSeconds int) {
+	cmd := exec.Command("shutdown", "-s", "-t", strconv.Itoa(timeInSeconds))
+	out, err := cmd.Output()
+
+	if err != nil {
+		log.Println("Erro, não foi possivel: ", err)
+	}
+
+	log.Println("Output: ", string(out))
+}
+
+// Given the time in seconds, it will schedule the computer to shutdown in the especified time
+func abortShutdown() {
+	cmd := exec.Command("shutdown", "-a")
+	out, err := cmd.Output()
+
+	if err != nil {
+		log.Println("Erro, não foi possivel: ", err)
+	}
+
+	log.Println("Output: ", string(out))
+}
+
+// Format the scheduled time string in a way that it returns the hour or the minutes. If hour_return is true, it will return hour, else return minutes.
+func formatTimeString(scheduled_time string, hour_return bool) int {
+	if hour_return == true {
+		hour, err := strconv.Atoi(scheduled_time[0:2])
 		if err != nil {
-			fmt.Println("Erro: ", err)
+			log.Println("Erro no primeiro ATOI(): ", err)
 		}
 
 		return hour
 	}
 
-	minutes, err := strconv.Atoi(string([]rune(scheduledTime)[3:5]))
+	minutes, err := strconv.Atoi(scheduled_time[3:5])
 	if err != nil {
-		fmt.Println("Erro: ", err)
+		log.Println("Erro no segundo ATOI(): ", err)
 	}
 
-	return minutes
-}
-
-// Input times in the format hh:mm in the range 00:00 to 23:59
-func getTime() string {
-	var scheduledTime string
-
-	fmt.Println("Digite uma hora para ser agendado o desligamento no formato (hh:mm, exemplo: 22:31)")
-	fmt.Scanln(&scheduledTime)
-
-	for formatTimeString(scheduledTime, true) < 0 || formatTimeString(scheduledTime, true) > 23 {
-		fmt.Println("Hora invalida, digite a hora novamente no formato hh:mm, lembrando que horas vão de 00 a 23 e minutos de 0 a 59")
-		fmt.Scanln(&scheduledTime)
-
-		if formatTimeString(scheduledTime, true) >= 0 || formatTimeString(scheduledTime, true) <= 23 {
-			for formatTimeString(scheduledTime, false) < 0 || formatTimeString(scheduledTime, false) > 59 {
-				fmt.Println("Hora invalida, digite a hora novamente no formato hh:mm, lembrando que horas vão de 00 a 23 e minutos de 0 a 59")
-				fmt.Scanln(&scheduledTime)
-			}
-		}
-	}
-
-	return scheduledTime
-}
-
-func getFutureHour(scheduledTime string) int {
-	hour := formatTimeString(scheduledTime, true)
-	return hour
-}
-
-func getFutureMinute(scheduledTime string) int {
-	minutes := formatTimeString(scheduledTime, false)
 	return minutes
 }
 
@@ -77,40 +74,84 @@ func compareDate(date1 time.Time, date2 time.Time) int {
 	return int(time_in_seconds)
 }
 
-// Given the time in seconds, it will schedule the computer to shutdown in the especified time
-func shutdown(timeInSeconds int) {
-	cmd := exec.Command("shutdown", "-s", "-t", strconv.Itoa(timeInSeconds))
-	out, err := cmd.Output()
+// Validate input veryfying if its in the format hh:mm in the range 00:00 to 23:59
+func validateTimeInput(input string) string {
+	var scheduled_time string
+	var invalid = false
 
-	if err != nil {
-		fmt.Println("Erro, não foi possivel: ", err)
+	//fmt.Println("Digite uma hora para ser agendado o desligamento no formato (hh:mm, exemplo: 22:31)")
+	//fmt.Scanln(&scheduledTime)
+
+	if formatTimeString(scheduled_time, true) < 0 || formatTimeString(scheduled_time, true) > 23 {
+		invalid = true
+
+		if formatTimeString(scheduled_time, true) >= 0 || formatTimeString(scheduled_time, true) <= 23 {
+			invalid = true
+
+			if formatTimeString(scheduled_time, false) < 0 || formatTimeString(scheduled_time, false) > 59 {
+				invalid = true
+			}
+		}
+
+		if invalid != false {
+			log.Println("Hora invalida, digite a hora novamente no formato hh:mm, lembrando que horas vão de 00 a 23 e minutos de 0 a 59")
+			scheduled_time = ""
+
+			return scheduled_time
+		}
 	}
 
-	fmt.Println("Output: ", string(out))
+	/*for formatTimeString(scheduled_time, true) < 0 || formatTimeString(scheduled_time, true) > 23 {
+		fmt.Println("Hora invalida, digite a hora novamente no formato hh:mm, lembrando que horas vão de 00 a 23 e minutos de 0 a 59")
+		fmt.Scanln(&scheduled_time)
+
+		if formatTimeString(scheduled_time, true) >= 0 || formatTimeString(scheduled_time, true) <= 23 {
+			for formatTimeString(scheduled_time, false) < 0 || formatTimeString(scheduled_time, false) > 59 {
+				fmt.Println("Hora invalida, digite a hora novamente no formato hh:mm, lembrando que horas vão de 00 a 23 e minutos de 0 a 59")
+				fmt.Scanln(&scheduled_time)
+			}
+		}
+	}*/
+	scheduled_time = input
+
+	return scheduled_time
 }
 
-// Given the time in seconds, it will schedule the computer to shutdown in the especified time
-func abortShutdown() {
-	cmd := exec.Command("shutdown", "-a")
-	out, err := cmd.Output()
+func getFutureHour(scheduledTime string) int {
+	hour := formatTimeString(scheduledTime, true)
+	return hour
+}
 
-	if err != nil {
-		fmt.Println("Erro, não foi possivel: ", err)
-	}
-
-	fmt.Println("Output: ", string(out))
+func getFutureMinute(scheduledTime string) int {
+	minutes := formatTimeString(scheduledTime, false)
+	return minutes
 }
 
 func main() {
-	scheduledTime := getTime()
+	myApp := app.New()
+	window := myApp.NewWindow("Gambit v1.0")
+	window.Resize(fyne.NewSize(1000, 470))
 
-	remainingHour := RemainingHour(scheduledTime)
-	remainingMinutes := RemainingMinutes(scheduledTime)
+	input := widget.NewEntry()
+	input.SetPlaceHolder("(hh:mm, exemplo: 22:31)")
 
-	timeInSeconds := convertTimeToSeconds(remainingHour, remainingMinutes)
+	content := container.NewVBox(input, widget.NewButton("Agendar", func() {
+		log.Println("Content was:", input.Text)
 
-	var esc string
-	fmt.Println("[PRESSIONE ENTER PARA CONCLUIR]")
-	fmt.Scanln(&esc)
-	shutdown(timeInSeconds)
+		scheduled_time := validateTimeInput(input.Text)
+		log.Println(scheduled_time)
+
+		if scheduled_time != "" {
+			future_date := constructDate(formatTimeString(scheduled_time, true), formatTimeString(scheduled_time, false))
+			timeInSeconds := compareDate(time.Now(), future_date)
+
+			shutdown(timeInSeconds)
+		}
+
+	}), widget.NewButton("Cancelar agendamentos", func() {
+		abortShutdown()
+	}))
+
+	window.SetContent(content)
+	window.ShowAndRun()
 }
