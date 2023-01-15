@@ -81,7 +81,7 @@ func compareDate(given_date time.Time) int {
 	dif_date := time.Date(given_date.Year()-time.Now().Year(), given_date.Month()-time.Now().Month(), given_date.Day()-time.Now().Day(), given_date.Hour()-time.Now().Hour(), given_date.Minute()-time.Now().Minute(), given_date.Second()-time.Now().Second(), given_date.Nanosecond()-time.Now().Nanosecond(), time.UTC)
 
 	//dif := time.Until(given_date).Abs().Seconds()
-	dif_time_in_seconds := int(dif_date.Minute()*60 + dif_date.Second())
+	dif_time_in_seconds := int(dif_date.Hour()*60*60 + dif_date.Minute()*60 + dif_date.Second())
 	log.Println("dif_time: ", dif_time_in_seconds)
 
 	return dif_time_in_seconds
