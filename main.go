@@ -44,7 +44,7 @@ func AbortShutdown(window fyne.Window) {
 
 // The machine will shutdown immediatly
 func ShutdownNow(window fyne.Window) {
-	cmd := exec.Command("shutdown", "-s")
+	cmd := exec.Command("shutdown", "-s", "-t", strconv.Itoa(1))
 	out, err := cmd.Output()
 
 	if err != nil {
