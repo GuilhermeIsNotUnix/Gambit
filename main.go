@@ -29,7 +29,7 @@ func Shutdown(timeInSeconds int, window fyne.Window) {
 	}
 }
 
-// Given the time in seconds, it will schedule the computer to shutdown in the especified time
+// If you want to abort a scheduled shutdown, it will abort it here
 func AbortShutdown(window fyne.Window) {
 	cmd := exec.Command("shutdown", "-a")
 	out, err := cmd.Output()
@@ -42,7 +42,7 @@ func AbortShutdown(window fyne.Window) {
 	}
 }
 
-// The machine will shutdown immediatly
+// In case you want to shutdown now, this function will make the machine shutdown "immediatly"
 func ShutdownNow(window fyne.Window) {
 	cmd := exec.Command("shutdown", "-s", "-t", strconv.Itoa(1))
 	out, err := cmd.Output()
@@ -55,11 +55,13 @@ func ShutdownNow(window fyne.Window) {
 	}
 }
 
-// Format the scheduled time string in a way that it returns the hour or the minutes. If hour_return is true, it will return hour, else return minutes. It first checks if the unformatted string is not empty and if the lenght is 5, just then it catchs the hour or minute as integer.
-func FormatTimeString(scheduled_time string, hour_return bool) int {
-	if scheduled_time != "" && len(scheduled_time) == 5 {
-		if hour_return == true {
-			hour, err := strconv.Atoi(scheduled_time[0:2])
+// Format the scheduled time string in a way that it returns the hour or the minutes for the use in another functions.
+// If hourReturn is true, it will return hour, else return minutes.
+// It first checks if the unformatted string is not empty and if the lenght is 5, just then it catchs the hour or minute as integer.
+func FormatTimeString(scheduledTime string, hourReturn bool) int {
+	if scheduledTime != "" && len(scheduledTime) == 5 {
+		if hourReturn == true {
+			hour, err := strconv.Atoi(scheduledTime[0:2])
 			if err != nil {
 				log.Println("Erro no primeiro ATOI(): ", err)
 			}
@@ -67,7 +69,7 @@ func FormatTimeString(scheduled_time string, hour_return bool) int {
 			return hour
 		}
 
-		minutes, err := strconv.Atoi(scheduled_time[3:5])
+		minutes, err := strconv.Atoi(scheduledTime[3:5])
 		if err != nil {
 			log.Println("Erro no segundo ATOI(): ", err)
 		}
@@ -78,7 +80,7 @@ func FormatTimeString(scheduled_time string, hour_return bool) int {
 	return -1
 }
 
-// Given an hour and minutes the function constructs a formal standard date type, if you given hour is less the actual system hour, it means it will be that hour from the next day, or else its the same day
+// Given an hour and minutes the function constructs a formal standard date type, if the given hour is less the actual system hour, it means it will be that hour from the next day, or else its the same day
 func ConstructDate(givenHour int, givenMinute int) time.Time {
 	if givenHour < time.Now().Hour() {
 		date := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day()+1, givenHour, givenMinute, 0, 0, time.UTC)
@@ -90,19 +92,19 @@ func ConstructDate(givenHour int, givenMinute int) time.Time {
 }
 
 // Compare a given date with time.Now() and return the time difference between them in seconds
-func CompareDate(given_date time.Time) int {
-	dif_date := time.Date(given_date.Year()-time.Now().Year(), given_date.Month()-time.Now().Month(), given_date.Day()-time.Now().Day(), given_date.Hour()-time.Now().Hour(), given_date.Minute()-time.Now().Minute(), given_date.Second()-time.Now().Second(), given_date.Nanosecond()-time.Now().Nanosecond(), time.UTC)
+func CompareDate(givenDate time.Time) int {
+	difDate := time.Date(givenDate.Year()-time.Now().Year(), givenDate.Month()-time.Now().Month(), givenDate.Day()-time.Now().Day(), givenDate.Hour()-time.Now().Hour(), givenDate.Minute()-time.Now().Minute(), givenDate.Second()-time.Now().Second(), givenDate.Nanosecond()-time.Now().Nanosecond(), time.UTC)
 
-	//dif := time.Until(given_date).Abs().Seconds()
-	dif_time_in_seconds := int(dif_date.Hour()*60*60 + dif_date.Minute()*60 + dif_date.Second())
-	log.Println("dif_time: ", dif_time_in_seconds)
+	//dif := time.Until(givenDate).Abs().Seconds()
+	difTimeInSeconds := int(difDate.Hour()*60*60 + difDate.Minute()*60 + difDate.Second())
+	log.Println("dif_time: ", difTimeInSeconds)
 
-	return dif_time_in_seconds
+	return difTimeInSeconds
 }
 
 // Validate input veryfying if its in the format hh:mm in the range 00:00 to 23:59
 func ValidateTimeInput(input string, window fyne.Window) string {
-	var scheduled_time string
+	var scheduledTime string
 	var invalid = false
 
 	//fmt.Println("Digite uma hora para ser agendado o desligamento no formato (hh:mm, exemplo: 22:31)")
@@ -121,14 +123,14 @@ func ValidateTimeInput(input string, window fyne.Window) string {
 
 		if invalid != false {
 			dialog.ShowInformation("Gambit", "Hora inválida, digite a hora novamente no formato hh:mm, lembrando que horas vão de 00 a 23 e minutos de 0 a 59", window)
-			scheduled_time = ""
+			scheduledTime = ""
 
-			return scheduled_time
+			return scheduledTime
 		}
 	}
 
-	scheduled_time = input
-	return scheduled_time
+	scheduledTime = input
+	return scheduledTime
 }
 
 func GetFutureHour(scheduledTime string) int {
@@ -143,7 +145,7 @@ func GetFutureMinute(scheduledTime string) int {
 
 func main() {
 	myApp := app.New()
-	window := myApp.NewWindow("Gambit v1.0")
+	window := myApp.NewWindow("Gambit v1.2.2")
 	window.Resize(fyne.NewSize(1000, 470))
 
 	input := widget.NewEntry()
@@ -152,10 +154,10 @@ func main() {
 	content := container.NewVBox(input, widget.NewButton("Agendar", func() {
 		log.Println("Content was:", input.Text)
 
-		scheduled_time := ValidateTimeInput(input.Text, window)
+		scheduledTime := ValidateTimeInput(input.Text, window)
 
-		if scheduled_time != "" {
-			scheduled_date := ConstructDate(FormatTimeString(scheduled_time, true), FormatTimeString(scheduled_time, false))
+		if scheduledTime != "" {
+			scheduled_date := ConstructDate(FormatTimeString(scheduledTime, true), FormatTimeString(scheduledTime, false))
 			time_in_seconds := CompareDate(scheduled_date)
 
 			Shutdown(time_in_seconds, window)
