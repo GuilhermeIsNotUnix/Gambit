@@ -11,7 +11,11 @@ The use is simple for now. Given an input of time in the format HH:MM, it will s
 To compile basically you need to have all the imports, but fyne have its requirements to work also, so you will need the **Go tools** (at least version 1.12), a **C compiler** (GCC for example, to connect with system graphics drivers) and a **system graphics driver**, make sure you have them first on your system, then execute:
 
 $ go get fyne.io/fyne/v2@latest
+
 $ go install fyne.io/fyne/v2/cmd/fyne@latest
+
 $ cd Gambit
+
 $ go mod tidy
+
 $ go build -ldflags -H=windowsgui
