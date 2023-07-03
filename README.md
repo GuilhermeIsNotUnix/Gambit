@@ -11,7 +11,7 @@ Unfortunately, from the tests I did on Windows, some antiviruses remove the Gamb
 
 The use is simple for now. Given an input of time in the format HH:MM, it will schedule a shutdown to this given time automatically calculating difference in seconds between two dates (scheduled date and now date).
 
-# Compiling
+# Compiling from source
 
 To compile basically you need to have all the imports, but fyne have its requirements to work also, so you will need the **Go tools** (at least version 1.12), a **C compiler** (GCC for example, to connect with system graphics drivers) and a **system graphics driver**, make sure you have them first on your system, then execute:
 
