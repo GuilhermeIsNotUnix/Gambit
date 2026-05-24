@@ -1,3 +1,7 @@
+# Warning
+
+Gambit has been archived and will no longer be updated, but a spiritual successor called [Yotei](https://github.com/GuilhermeIsNotUnix/Yotei) is currently being developed by the same author, which offers many more features such as a CLI interface, a Flutter GUI in development and cross-platform capabilities (Linux, Windows and MacOS support).
+
 # Gambit
 
 Gambit is a shutdown scheduler utility software for Windows made in Go programming language with the Fyne GUI library. Gambit is licensed under the Apache-2.0 license, please read it carefully.
